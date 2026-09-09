@@ -1,0 +1,21 @@
+{
+  "name": "PiHound — Pi Network Analytics & Explorer",
+  "short_name": "PiHound",
+  "description": "Deep analytics toolkit for the Pi Network — price charts, wallet lookups, transaction tracing, and live sweep monitoring.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "icons": [
+    {
+      "src": "/images/favicon.webp",
+      "sizes": "192x192",
+      "type": "image/webp"
+    },
+    {
+      "src": "/images/icon.webp",
+      "sizes": "512x512",
+      "type": "image/webp"
+    }
+  ]
+}
