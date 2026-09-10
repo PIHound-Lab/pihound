@@ -103,8 +103,8 @@ export default function PctAndCexs() {
   const wallets = data?.wallets || (currentCategory === 'pct' ? data?.pct_wallets : data?.cex_wallets) || [];
   const totalCount = data?.total_count ?? wallets.length;
   const totalPages = data?.total_pages ?? Math.max(1, Math.ceil(totalCount / pageSize));
-  const pctCount = data?.pct_count ?? (currentCategory === 'pct' ? totalCount : null);
-  const cexCount = data?.cex_count ?? (currentCategory === 'cex' ? totalCount : null);
+  const pctCount = data?.pct_count ?? (currentCategory === 'pct' ? totalCount : 0);
+  const cexCount = data?.cex_count ?? (currentCategory === 'cex' ? totalCount : 0);
 
   const startRecord = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord = Math.min(page * pageSize, totalCount);
@@ -136,7 +136,7 @@ export default function PctAndCexs() {
               {loading && !data ? 'N/A' : fmtPi(data?.total_pct_balance)}
             </div>
             <span className="pct-stat-sub">
-              {pctCount != null ? `${pctCount.toLocaleString()} Core Wallets` : 'N/A'}
+              {pctCount != null && pctCount > 0 ? `${pctCount.toLocaleString()} Core Wallets` : (loading ? 'Loading...' : '0 Core Wallets')}
             </span>
           </div>
           <div className="pct-stat-box">
@@ -145,7 +145,7 @@ export default function PctAndCexs() {
               {loading && !data ? 'N/A' : fmtPi(data?.total_cex_balance)}
             </div>
             <span className="pct-stat-sub">
-              {cexCount != null ? `${cexCount.toLocaleString()} Exchange Wallets` : 'N/A'}
+              {cexCount != null && cexCount > 0 ? `${cexCount.toLocaleString()} Exchange Wallets` : (loading ? 'Loading...' : '0 Exchange Wallets')}
             </span>
           </div>
         </div>
@@ -160,7 +160,7 @@ export default function PctAndCexs() {
             className={`pct-tab ${currentCategory === 'pct' ? 'active' : ''}`}
             onClick={() => handleCategoryChange('pct')}
           >
-            PCT <span id="count-pct-badge" className="tab-count">{pctCount.toLocaleString()}</span>
+            PCT <span id="count-pct-badge" className="tab-count">{(pctCount ?? 0).toLocaleString()}</span>
           </button>
           <button
             type="button"
@@ -168,7 +168,7 @@ export default function PctAndCexs() {
             className={`pct-tab ${currentCategory === 'cex' ? 'active' : ''}`}
             onClick={() => handleCategoryChange('cex')}
           >
-            CEXs <span id="count-cex-badge" className="tab-count">{cexCount.toLocaleString()}</span>
+            CEXs <span id="count-cex-badge" className="tab-count">{(cexCount ?? 0).toLocaleString()}</span>
           </button>
         </div>
 
@@ -215,8 +215,8 @@ export default function PctAndCexs() {
                     </td>
                   </tr>
                 ) : (
-                  wallets.map((w) => (
-                    <tr key={w.address} className="table-row">
+                  wallets.map((w, idx) => (
+                    <tr key={`${w.address}-${idx}`} className="table-row">
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                           <img
@@ -279,8 +279,8 @@ export default function PctAndCexs() {
               No wallets match the search criteria.
             </div>
           ) : (
-            wallets.map((w) => (
-              <div key={w.address} className="pct-mobile-card">
+            wallets.map((w, idx) => (
+              <div key={`${w.address}-${idx}`} className="pct-mobile-card">
                 <div className="pct-mobile-card-top">
                   <div className="pct-mobile-identity">
                     <img
@@ -332,7 +332,7 @@ export default function PctAndCexs() {
         <div className="pct-pagination-bar">
           <div className="pct-pagination-info">
             <span>
-              Showing <strong>{startRecord}</strong>–<strong>{endRecord}</strong> of <strong>{totalCount.toLocaleString()}</strong> wallets
+              Showing <strong>{startRecord}</strong>–<strong>{endRecord}</strong> of <strong>{(totalCount || 0).toLocaleString()}</strong> wallets
             </span>
             <div className="pct-page-size-wrapper">
               <span>Per page:</span>
