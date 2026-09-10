@@ -101,10 +101,10 @@ export default function WalletSweeps() {
   const rawBadActors = sweepsData?.top_bad_actors || sweepsData?.bad_actors || [];
   const badActors = rawBadActors;
 
-  const totalPiSweptVal = Number(sweepsData?.pi_swept || sweepsData?.total_swept || 0);
-  const totalSweepsCount = sweepsData?.total || 0;
-  const badActorsCount = sweepsData?.bad_actors_count || badActors.length || 0;
-  const totalFeedPages = sweepsData?.total_pages || Math.max(1, Math.ceil(totalSweepsCount / sweepsPageSize));
+  const totalPiSweptVal = sweepsData?.pi_swept != null ? Number(sweepsData.pi_swept) : (sweepsData?.total_swept != null ? Number(sweepsData.total_swept) : null);
+  const totalSweepsCount = sweepsData?.total ?? null;
+  const badActorsCount = sweepsData?.bad_actors_count ?? (badActors.length > 0 ? badActors.length : null);
+  const totalFeedPages = sweepsData?.total_pages || Math.max(1, Math.ceil((totalSweepsCount || 0) / sweepsPageSize));
 
   const paginatedEvents = events;
   const paginatedActors = showAllActors ? badActors : badActors.slice(actorsPage * 25, (actorsPage + 1) * 25);
@@ -141,63 +141,53 @@ export default function WalletSweeps() {
   return (
     <>
       {/* Search and Filters Header */}
-      <div className="card" style={{ padding: '2rem 1.5rem', marginBottom: '1rem', textAlign: 'center' }}>
-        <span className="card-title" style={{ marginBottom: '0.25rem' }}>
-          Wallet Sweeps Security Intelligence
-        </span>
-        <h1
-          id="total-pi-swept"
-          style={{
-            fontSize: 'clamp(1.5rem, 6.5vw, 2.75rem)',
-            fontWeight: 900,
-            color: '#ffffff',
-            fontFamily: 'var(--font-mono)',
-            margin: '0.5rem 0',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {totalPiSweptVal.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}{' '}
-          π
-        </h1>
-        <div
-          className="dim"
-          style={{
-            fontSize: '0.85rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            marginBottom: '1.5rem',
-          }}
-        >
-          Total Pi Volume Swept / Stolen So Far
+      <div className="card" style={{ padding: '0.85rem 1.15rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.65rem' }}>
+          <div>
+            <span className="card-title" style={{ marginBottom: '0.1rem', fontSize: '0.78rem' }}>
+              Wallet Sweeps Security Intelligence
+            </span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+              <span
+                id="total-pi-swept"
+                style={{
+                  fontSize: '1.45rem',
+                  fontWeight: 800,
+                  color: '#ffffff',
+                  fontFamily: 'var(--font-mono)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {totalPiSweptVal != null
+                  ? `${totalPiSweptVal.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })} π`
+                  : 'N/A'}
+              </span>
+              <span className="dim" style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Total Pi Swept
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="stat-grid-sweeps">
-          <div className="stat-card" style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)' }}>
-            <div className="stat-label">Bad Actor Wallets</div>
-            <div id="bad-actor-count" className="stat-value" style={{ color: '#ffffff', fontSize: '1.25rem' }}>
-              {badActorsCount.toLocaleString()}
-            </div>
+        <div className="sweeps-metrics-bar">
+          <div className="metric-item">
+            <span className="metric-label">Bad Actor Wallets</span>
+            <span id="bad-actor-count" className="metric-val mono">{badActorsCount != null ? badActorsCount.toLocaleString() : 'N/A'}</span>
           </div>
-          <div className="stat-card" style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)' }}>
-            <div className="stat-label">Total Sweeps Detected</div>
-            <div id="sweep-count" className="stat-value" style={{ color: '#ffffff', fontSize: '1.25rem' }}>
-              {totalSweepsCount.toLocaleString()}
-            </div>
+          <div className="metric-item">
+            <span className="metric-label">Total Sweeps Detected</span>
+            <span id="sweep-count" className="metric-val mono">{totalSweepsCount != null ? totalSweepsCount.toLocaleString() : 'N/A'}</span>
           </div>
-          <div className="stat-card" style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)' }}>
-            <div className="stat-label">Time Frame</div>
-            <div id="sweep-window" className="stat-value" style={{ fontSize: '1.15rem', color: '#ffffff' }}>
-              {sweepsData?.time_window || 'All Time Recorded'}
-            </div>
+          <div className="metric-item">
+            <span className="metric-label">Time Frame</span>
+            <span id="sweep-window" className="metric-val mono">{sweepsData?.time_window || 'N/A'}</span>
           </div>
-          <div className="stat-card" style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)' }}>
-            <div className="stat-label">Sweep Type</div>
-            <div className="stat-value" style={{ fontSize: '1.1rem', color: '#ffffff' }}>
-              Claim & Send
-            </div>
+          <div className="metric-item">
+            <span className="metric-label">Sweep Type</span>
+            <span className="metric-val mono" style={{ fontSize: '0.95rem' }}>{sweepsData ? (sweepsData?.sweep_type || 'Claim & Send') : 'N/A'}</span>
           </div>
         </div>
       </div>
@@ -273,7 +263,7 @@ export default function WalletSweeps() {
           className={`tab-btn ${activeTab === 'feed' ? 'active' : ''}`}
           onClick={() => setActiveTab('feed')}
         >
-          <span>Sweep Transactions ({totalSweepsCount.toLocaleString()})</span>
+          <span>Sweeps ({totalSweepsCount != null ? totalSweepsCount.toLocaleString() : 'N/A'})</span>
         </button>
         <button
           id="tab-btn-actors"
@@ -281,7 +271,7 @@ export default function WalletSweeps() {
           className={`tab-btn ${activeTab === 'actors' ? 'active' : ''}`}
           onClick={() => setActiveTab('actors')}
         >
-          <span>Top Bad Actor Intelligence ({badActors.length.toLocaleString()})</span>
+          <span>Bad Actors ({badActorsCount != null ? badActorsCount.toLocaleString() : 'N/A'})</span>
         </button>
       </div>
 

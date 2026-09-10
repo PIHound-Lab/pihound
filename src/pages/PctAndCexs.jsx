@@ -4,7 +4,9 @@ import { useModal } from '../context/ModalContext';
 import { fetchPctAndCexs } from '../services/api';
 
 function fmtPi(val) {
-  const num = Number(val) || 0;
+  if (val == null || val === '') return 'N/A';
+  const num = Number(val);
+  if (isNaN(num)) return 'N/A';
   return (
     num.toLocaleString(undefined, {
       minimumFractionDigits: 2,
@@ -101,8 +103,8 @@ export default function PctAndCexs() {
   const wallets = data?.wallets || (currentCategory === 'pct' ? data?.pct_wallets : data?.cex_wallets) || [];
   const totalCount = data?.total_count ?? wallets.length;
   const totalPages = data?.total_pages ?? Math.max(1, Math.ceil(totalCount / pageSize));
-  const pctCount = data?.pct_count ?? (currentCategory === 'pct' ? totalCount : 0);
-  const cexCount = data?.cex_count ?? (currentCategory === 'cex' ? totalCount : 8);
+  const pctCount = data?.pct_count ?? (currentCategory === 'pct' ? totalCount : null);
+  const cexCount = data?.cex_count ?? (currentCategory === 'cex' ? totalCount : null);
 
   const startRecord = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord = Math.min(page * pageSize, totalCount);
@@ -131,16 +133,20 @@ export default function PctAndCexs() {
           <div className="pct-stat-box">
             <span className="pct-stat-label">PCT Core Total</span>
             <div id="total-pct-balance" className="pct-stat-value">
-              {loading && !data ? '--' : fmtPi(data?.total_pct_balance)}
+              {loading && !data ? 'N/A' : fmtPi(data?.total_pct_balance)}
             </div>
-            <span className="pct-stat-sub">{pctCount.toLocaleString()} Core Wallets</span>
+            <span className="pct-stat-sub">
+              {pctCount != null ? `${pctCount.toLocaleString()} Core Wallets` : 'N/A'}
+            </span>
           </div>
           <div className="pct-stat-box">
             <span className="pct-stat-label">CEX Reserves Total</span>
             <div id="total-cex-balance" className="pct-stat-value">
-              {loading && !data ? '--' : fmtPi(data?.total_cex_balance)}
+              {loading && !data ? 'N/A' : fmtPi(data?.total_cex_balance)}
             </div>
-            <span className="pct-stat-sub">{cexCount.toLocaleString()} Exchange Wallets</span>
+            <span className="pct-stat-sub">
+              {cexCount != null ? `${cexCount.toLocaleString()} Exchange Wallets` : 'N/A'}
+            </span>
           </div>
         </div>
       </div>

@@ -1,16 +1,9 @@
-import {
-  MOCK_PRICE,
-  MOCK_NETWORK_STATS,
-  MOCK_PCT_AND_CEXS,
-  generatePriceHistory,
-  getMockWalletTransactions,
-  getMockWalletInfo,
-  getMockLockups,
-  getMockTrace,
-  getMockSweeps,
-  getMockBubbleMap,
-} from './mockData';
 import { sanitizeAddress, validateStandardAddress } from '../utils/address';
+
+/**
+ * PiHound Frontend API Service
+ * Handles API communication with the PiHound backend.
+ */
 const RAW_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 const BASE_URL = RAW_BASE_URL.replace(/\/+$/, '');
 
@@ -36,7 +29,7 @@ export async function fetchPrice() {
   } catch {
     // fallback
   }
-  return MOCK_PRICE;
+  return { price_usd: null, change_24h: null, high_24h: null, low_24h: null, volume_24h: null };
 }
 
 export async function fetchPriceHistory(tf = 'D') {
@@ -53,7 +46,7 @@ export async function fetchPriceHistory(tf = 'D') {
   } catch {
     // fallback
   }
-  return generatePriceHistory(tf);
+  return [];
 }
 
 export async function fetchNetworkStats() {
@@ -65,7 +58,7 @@ export async function fetchNetworkStats() {
   } catch {
     // fallback
   }
-  return MOCK_NETWORK_STATS;
+  return { accounts: null, locked: null, circulating: null, pioneer_transfers: null, pending_failed: null, last_ledger: null };
 }
 
 export async function fetchWalletInfo(address) {
@@ -86,7 +79,7 @@ export async function fetchWalletInfo(address) {
   } catch {
     // fallback
   }
-  return getMockWalletInfo(cleanAddr);
+  return { error: 'Failed to fetch wallet info' };
 }
 
 export async function fetchWalletLockups(address) {
@@ -107,7 +100,7 @@ export async function fetchWalletLockups(address) {
   } catch {
     // fallback
   }
-  return getMockLockups(cleanAddr);
+  return { available: null, lock: null };
 }
 
 export async function fetchWalletTransactions(address, cursor = null, limit = 50) {
@@ -134,7 +127,7 @@ export async function fetchWalletTransactions(address, cursor = null, limit = 50
     // fallback
   }
   return {
-    transactions: getMockWalletTransactions(cleanAddr),
+    transactions: [],
     cursor: null,
   };
 }
@@ -151,7 +144,7 @@ export async function fetchTrace(txHash) {
   } catch {
     // fallback
   }
-  return getMockTrace(txHash);
+  return { nodes: [], links: [], error: 'Trace unavailable' };
 }
 
 export async function fetchSweeps(params = {}) {
@@ -167,7 +160,7 @@ export async function fetchSweeps(params = {}) {
   } catch {
     // fallback
   }
-  return getMockSweeps();
+  return { events: [], total: 0, pi_swept: null, bad_actors_count: 0, top_bad_actors: [], time_window: 'N/A' };
 }
 
 export async function fetchBubblemap(address, limit = 2000) {
@@ -193,7 +186,7 @@ export async function fetchBubblemap(address, limit = 2000) {
   } catch {
     // fallback
   }
-  return getMockBubbleMap(cleanAddr);
+  return { nodes: [], links: [], error: 'Bubble map unavailable' };
 }
 
 export async function fetchPctAndCexs(params = {}) {
@@ -218,8 +211,8 @@ export async function fetchPctAndCexs(params = {}) {
       }
     }
   } catch {
-    // fallback to mock
+    // fallback
   }
-  return MOCK_PCT_AND_CEXS;
+  return { wallets: [], total_pct_balance: null, total_cex_balance: null, grand_total_balance: null, total_count: 0, total_pages: 1 };
 }
 

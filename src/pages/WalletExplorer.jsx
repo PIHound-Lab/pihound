@@ -51,6 +51,7 @@ export default function WalletExplorer() {
   };
 
   // Filters
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [addrFilter, setAddrFilter] = useState('');
   const [minAmount, setMinAmount] = useState('');
@@ -188,15 +189,17 @@ export default function WalletExplorer() {
   const successTxCount = transactions.filter((t) => t.successful).length;
   const failedTxCount = transactions.filter((t) => !t.successful).length;
 
-  const availableBal = Number(lockups?.available || walletInfo?.balance || 0);
-  const lockedBal = lockups?.lock ? Number(lockups.lock.amount || 0) : 0;
-  const totalBal = availableBal + lockedBal;
+  const rawAvailable = lockups?.available ?? walletInfo?.balance;
+  const availableBal = rawAvailable != null ? Number(rawAvailable) : null;
+  const lockedBal = lockups?.lock?.amount != null ? Number(lockups.lock.amount) : (lockups ? 0 : null);
+  const totalBal = (availableBal != null || lockedBal != null) ? ((availableBal || 0) + (lockedBal || 0)) : null;
   const isClaimable = lockups?.lock && Number(lockups.lock.days) <= 0;
   const isLocked = lockups?.lock && Number(lockups.lock.days) > 0;
   const lockDays = lockups?.lock ? Number(lockups.lock.days) : 0;
   const unlockDateStr = lockups?.lock?.unlock_ts
     ? new Date(lockups.lock.unlock_ts * 1000).toUTCString().replace(':00 GMT', ' UTC')
     : null;
+  const isFilteredActive = statusFilter !== 'all' || addrFilter.trim() !== '' || minAmount !== '' || maxAmount !== '';
 
   const exportTransactionsCSV = () => {
     if (!filteredTransactions || filteredTransactions.length === 0) return;
@@ -291,7 +294,7 @@ export default function WalletExplorer() {
           {loading && (
             <div className="card" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
               <span style={{ color: 'var(--accent)', marginRight: '0.5rem' }}>●</span>
-              Fetching wallet data from Pi mainnet...
+              Fetching wallet data from backend...
             </div>
           )}
 
@@ -356,84 +359,77 @@ export default function WalletExplorer() {
                 </div>
               </div>
 
-              {/* 4 Financial Highlight Cards */}
-              <div className="wallet-financials-grid">
-                {/* 1. Liquid / Available Balance */}
-                <div className="wallet-financial-card">
-                  <div className="wallet-financial-header">
-                    <span className="wallet-financial-label">Available Balance</span>
+              {/* Minimal Unified Metrics Bar */}
+              <div className="wallet-metrics-bar">
+                <div className="metric-item">
+                  <span className="metric-label">Available Balance</span>
+                  <div className="metric-val mono">
+                    {availableBal != null
+                      ? availableBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                      : 'N/A'}
+                    <span className="pi-symbol">π</span>
                     <span className="financial-pill pill-liquid">Liquid</span>
                   </div>
-                  <div className="wallet-financial-val">
-                    {availableBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    <span className="pi-symbol">π</span>
-                  </div>
-                  <div className="wallet-financial-sub">Ready for transfer &amp; gas fees</div>
                 </div>
 
-                {/* 2. Locked Protocol Balance */}
-                <div className="wallet-financial-card">
-                  <div className="wallet-financial-header">
-                    <span className="wallet-financial-label">Locked Protocol</span>
+                <div className="metric-item">
+                  <span className="metric-label">Locked Protocol</span>
+                  <div className="metric-val mono">
+                    {lockedBal != null ? (
+                      lockedBal > 0 ? (
+                        <>
+                          {lockedBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <span className="pi-symbol">π</span>
+                        </>
+                      ) : (
+                        <span style={{ color: 'var(--text-dim)' }}>0.00 <span className="pi-symbol">π</span></span>
+                      )
+                    ) : (
+                      'N/A'
+                    )}
                     {isClaimable ? (
                       <span className="financial-pill pill-claimable">Claimable</span>
                     ) : isLocked ? (
-                      <span className="financial-pill pill-locked">Locked</span>
+                      <span className="financial-pill pill-locked">{lockDays}d</span>
                     ) : (
                       <span className="financial-pill pill-none">None</span>
                     )}
                   </div>
-                  <div className="wallet-financial-val">
-                    {lockedBal > 0 ? (
-                      <>
-                        {lockedBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        <span className="pi-symbol">π</span>
-                      </>
-                    ) : (
-                      <span style={{ color: 'var(--text-dim)' }}>0.00 <span className="pi-symbol">π</span></span>
-                    )}
-                  </div>
-                  <div className="wallet-financial-sub">
-                    {isClaimable
-                       ? 'Lockup matured — ready to claim'
-                      : isLocked
-                      ? `${lockDays} days remaining`
-                      : 'No active protocol lockup'}
-                  </div>
                 </div>
 
-                {/* 3. Total Holdings */}
-                <div className="wallet-financial-card">
-                  <div className="wallet-financial-header">
-                    <span className="wallet-financial-label">Total Holdings</span>
-                    <span className="financial-pill pill-total">Total</span>
-                  </div>
-                  <div className="wallet-financial-val">
-                    {totalBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <div className="metric-item">
+                  <span className="metric-label">Total Holdings</span>
+                  <div className="metric-val mono">
+                    {totalBal != null
+                      ? totalBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                      : 'N/A'}
                     <span className="pi-symbol">π</span>
                   </div>
-                  <div className="wallet-financial-sub">Liquid + Locked combined</div>
                 </div>
 
-                {/* 4. Account Age */}
-                <div className="wallet-financial-card">
-                  <div className="wallet-financial-header">
-                    <span className="wallet-financial-label">Account Age</span>
-                    <span className="financial-pill pill-age">Genesis</span>
+                <div className="metric-item">
+                  <span className="metric-label">Account Age</span>
+                  <div className="metric-val mono">
+                    {walletInfo?.wallet_days ?? 'N/A'}
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>days</span>
                   </div>
-                  <div className="wallet-financial-val">
-                    {walletInfo.wallet_days ?? 'N/A'}
-                    <span className="pi-symbol" style={{ fontSize: '0.9rem' }}>days</span>
-                  </div>
-                  <div className="wallet-financial-sub">
-                    {walletInfo.created ? `Created ${walletInfo.created}` : 'On-chain age'}
+                </div>
+
+                <div className="metric-item">
+                  <span className="metric-label">Transactions</span>
+                  <div className="metric-val mono">
+                    <span id="stat-total-tx">{totalTxCount.toLocaleString()}{nextCursor ? '+' : ''}</span>
+                    <span className="metric-tx-breakdown">
+                      <span id="stat-success-tx" className="tx-badge-success" title="Successful">✓ {successTxCount.toLocaleString()}</span>
+                      <span id="stat-failed-tx" className="tx-badge-failed" title="Failed">✕ {failedTxCount.toLocaleString()}</span>
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Dedicated Lockup Schedule Banner (if lock exists) */}
               {lockups?.lock && (
-                <div className={`wallet-lockup-banner ${isClaimable ? 'claimable-banner' : 'locked-banner'}`}>
+                <div className={`wallet-lockup-banner ${isClaimable ? 'claimable-banner' : 'locked-banner'}`} style={{ marginTop: '0.75rem' }}>
                   <div className="lockup-banner-content">
                     <div>
                       {isClaimable ? (
@@ -461,50 +457,11 @@ export default function WalletExplorer() {
 
               {/* Retain semantic selector for backwards-compatible test queries */}
               <div id="wallet-info" style={{ display: 'none' }}>
-                <div>Available Balance: {availableBal}</div>
+                <div>Available Balance: {availableBal ?? 'N/A'}</div>
                 {lockups?.lock && <div>Locked: {lockups.lock.amount}</div>}
               </div>
             </div>
           )}
-
-          {/* 3 Metric Stat Cards */}
-          <div className="explorer-stats-grid">
-            <div className="explorer-stat-card">
-              <div className="explorer-stat-icon-box explorer-stat-icon-total">
-                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div id="stat-total-tx" className="explorer-stat-val">
-                {totalTxCount.toLocaleString()}{nextCursor ? '+' : ''}
-              </div>
-              <div className="explorer-stat-lbl">Total Transactions</div>
-            </div>
-
-            <div className="explorer-stat-card">
-              <div className="explorer-stat-icon-box explorer-stat-icon-success">
-                ✓
-              </div>
-              <div id="stat-success-tx" className="explorer-stat-val">
-                {successTxCount.toLocaleString()}
-              </div>
-              <div className="explorer-stat-lbl">
-                Successful
-              </div>
-            </div>
-
-            <div className="explorer-stat-card">
-              <div className="explorer-stat-icon-box explorer-stat-icon-failed">
-                ✕
-              </div>
-              <div id="stat-failed-tx" className="explorer-stat-val">
-                {failedTxCount.toLocaleString()}
-              </div>
-              <div className="explorer-stat-lbl">
-                Failed
-              </div>
-            </div>
-          </div>
 
           {/* Transaction History Card */}
           <div className="tx-history-card">
@@ -527,73 +484,81 @@ export default function WalletExplorer() {
               </div>
             </div>
 
-            {/* Transaction Filter Toolbar */}
-            <div className="tx-filter-toolbar">
-              <div className="tx-filter-status-row">
-                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-muted)', marginRight: '0.3rem' }}>
-                  Status:
-                </span>
+            {/* Transaction Controls Toolbar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
                 <button
+                  id="btn-open-explorer-filter"
                   type="button"
-                  id="filter-btn-all"
-                  className={`tx-filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
-                  onClick={() => setStatusFilter('all')}
+                  className="btn btn-secondary"
+                  onClick={() => setIsFilterModalOpen(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    padding: '0.45rem 0.85rem',
+                    fontSize: '0.84rem',
+                    borderRadius: '8px',
+                  }}
                 >
-                  All
+                  <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 00-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  <span>Filters</span>
+                  {isFilteredActive && (
+                    <span
+                      id="explorer-filter-badge"
+                      style={{
+                        background: 'var(--accent)',
+                        color: '#fff',
+                        borderRadius: '10px',
+                        padding: '0.1rem 0.45rem',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                      }}
+                    >
+                      Filtered
+                    </span>
+                  )}
                 </button>
-                <button
-                  type="button"
-                  id="filter-btn-success"
-                  className={`tx-filter-btn ${statusFilter === 'successful' ? 'active-success' : ''}`}
-                  onClick={() => setStatusFilter('successful')}
+
+                <div
+                  id="explorer-filter-summary"
+                  className="filter-summary-pill mono"
+                  style={{ fontSize: '0.76rem', padding: '0.35rem 0.75rem' }}
                 >
-                  ✓ Successful
-                </button>
-                <button
-                  type="button"
-                  id="filter-btn-failed"
-                  className={`tx-filter-btn ${statusFilter === 'failed' ? 'active-failed' : ''}`}
-                  onClick={() => setStatusFilter('failed')}
-                >
-                  ✕ Failed
-                </button>
+                  <span>Status: {statusFilter === 'all' ? 'All' : statusFilter === 'successful' ? 'Successful' : 'Failed'}</span>
+                  {addrFilter.trim() && (
+                    <>
+                      <span>•</span>
+                      <span>Addr: {shortAddr(addrFilter.trim(), 4, 4)}</span>
+                    </>
+                  )}
+                  {minAmount !== '' && (
+                    <>
+                      <span>•</span>
+                      <span>Min: {minAmount} π</span>
+                    </>
+                  )}
+                  {maxAmount !== '' && (
+                    <>
+                      <span>•</span>
+                      <span>Max: {maxAmount} π</span>
+                    </>
+                  )}
+                </div>
               </div>
 
-              <div className="tx-filter-inputs-row">
-                <input
-                  id="filter-address-input"
-                  className="tx-filter-input tx-filter-input-address"
-                  type="text"
-                  placeholder="Filter by Address (To / From)..."
-                  value={addrFilter}
-                  onChange={(e) => setAddrFilter(e.target.value)}
-                />
-                <input
-                  id="filter-min-amount"
-                  className="tx-filter-input tx-filter-input-amt"
-                  type="number"
-                  step="any"
-                  placeholder="Min Pi"
-                  value={minAmount}
-                  onChange={(e) => setMinAmount(e.target.value)}
-                />
-                <input
-                  id="filter-max-amount"
-                  className="tx-filter-input tx-filter-input-amt"
-                  type="number"
-                  step="any"
-                  placeholder="Max Pi"
-                  value={maxAmount}
-                  onChange={(e) => setMaxAmount(e.target.value)}
-                />
+              {isFilteredActive && (
                 <button
                   type="button"
-                  className="tx-filter-reset-btn"
+                  className="btn btn-secondary btn-sm"
                   onClick={handleResetFilters}
+                  style={{ fontSize: '0.76rem', padding: '0.35rem 0.65rem' }}
                 >
                   Reset Filters
                 </button>
-              </div>
+              )}
             </div>
 
             {/* Feed items */}
@@ -684,6 +649,134 @@ export default function WalletExplorer() {
                   All {totalTxCount.toLocaleString()} transactions loaded
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Filter Modal for Wallet Explorer */}
+      {isFilterModalOpen && (
+        <div
+          id="explorer-filter-modal"
+          className="modal-backdrop"
+          onClick={(e) => {
+            if (e.target.id === 'explorer-filter-modal') setIsFilterModalOpen(false);
+          }}
+        >
+          <div className="calendar-modal-card" style={{ maxWidth: '440px' }}>
+            <div className="calendar-modal-header">
+              <div className="calendar-modal-title">⚙️ Filter Transactions</div>
+              <button
+                id="btn-close-explorer-filter"
+                type="button"
+                className="calendar-modal-close"
+                onClick={() => setIsFilterModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="calendar-modal-body">
+              <div>
+                <label className="cal-label">Transaction Status</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '0.35rem' }}>
+                  <button
+                    type="button"
+                    id="filter-btn-all"
+                    className={`btn btn-sm ${statusFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setStatusFilter('all')}
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    id="filter-btn-success"
+                    className={`btn btn-sm ${statusFilter === 'successful' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setStatusFilter('successful')}
+                  >
+                    ✓ Success
+                  </button>
+                  <button
+                    type="button"
+                    id="filter-btn-failed"
+                    className={`btn btn-sm ${statusFilter === 'failed' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setStatusFilter('failed')}
+                  >
+                    ✕ Failed
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '0.85rem' }}>
+                <label className="cal-label">Target Address (To / From)</label>
+                <input
+                  id="filter-address-input"
+                  className="cal-input mono"
+                  type="text"
+                  placeholder="Filter by counterparty address..."
+                  value={addrFilter}
+                  onChange={(e) => setAddrFilter(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="cal-label">Filter by Pi Amount</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.35rem' }}>
+                  <div>
+                    <label className="cal-label" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Min Amount</label>
+                    <input
+                      id="filter-min-amount"
+                      className="cal-input mono"
+                      type="number"
+                      step="any"
+                      placeholder="e.g. 10"
+                      value={minAmount}
+                      onChange={(e) => setMinAmount(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="cal-label" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Max Amount</label>
+                    <input
+                      id="filter-max-amount"
+                      className="cal-input mono"
+                      type="number"
+                      step="any"
+                      placeholder="e.g. 500"
+                      value={maxAmount}
+                      onChange={(e) => setMaxAmount(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="cal-footer"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: '0.85rem',
+                  paddingTop: '1.25rem',
+                  borderTop: '1px solid var(--border)',
+                }}
+              >
+                <button
+                  type="button"
+                  id="filter-btn-reset-modal"
+                  className="cal-btn-cancel"
+                  onClick={handleResetFilters}
+                >
+                  Reset Filters
+                </button>
+                <button
+                  type="button"
+                  id="filter-btn-apply-modal"
+                  className="cal-btn-apply"
+                  onClick={() => setIsFilterModalOpen(false)}
+                >
+                  Apply Filters
+                </button>
+              </div>
             </div>
           </div>
         </div>

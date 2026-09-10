@@ -49,13 +49,27 @@ PiHound Frontend is a responsive analytics dashboard and explorer tailored for t
    ```
    Build output will be generated in `dist/`.
 
+## Architecture & Data Flow
+
+PiHound Frontend connects to the PiHound backend API for all blockchain metrics and explorer data. Blockchain ingestion, ledger crawling, and transaction indexing are handled server-side, keeping the client fast, lightweight, and decoupled from node infrastructure.
+
 ## How It Works
 
 1. **Routing & Dynamic SEO (`src/App.jsx`, `src/components/common/RouteSEO.jsx`)**:
    Provides client-side routing across key explorer modules (`/wallet_explorer`, `/track_and_trace`, `/wallet_sweeps`, `/bubblemap`, `/pct_and_cexs`). The `RouteSEO` component updates document titles, canonical URLs, and Open Graph tags on route transitions.
 
 2. **Data Fetching Layer (`src/services/api.js`)**:
-   Sends requests through Vite's dev proxy or Nginx reverse proxy to the backend API. If the backend is unreachable during local UI prototyping, it gracefully falls back to structured mock data.
+   Queries the backend REST API (routed via Vite's `/api` dev proxy locally or Nginx in production):
+   - `GET /api/price/` — Live market price, 24h change, high/low, and trading volume.
+   - `GET /api/price/history/?tf={D|W|M}` — Historical price chart candle points.
+   - `GET /api/network_stats/` — Global network ledger metrics, circulating supply, and lockups.
+   - `GET /api/wallet/{address}/` — Account balance, creation timestamp, and sequence status.
+   - `GET /api/lockups/{address}/` — Pioneer locked mining balances and unlock schedules.
+   - `GET /api/wallet/{address}/transactions/` — Paginated transaction history with cursor navigation.
+   - `GET /api/trace/{tx_hash}/` — Multi-hop payment path graph and terminal exchange identification.
+   - `GET /api/sweeps/` — Live automated 2-in-1 sweeper bot detections and bad actor intelligence.
+   - `GET /api/bubblemap/{address}/` — D3 graph cluster data for counterparty wallet relationships.
+   - `GET /api/pct_and_cexs/` — Monitored Pi Core Team reserve pools and exchange balances.
 
 3. **Visualizations**:
    - **BubbleMap (`src/pages/BubbleMap.jsx`)**: Uses D3 force simulations to cluster wallets by transaction volume, category, and exchange associations.

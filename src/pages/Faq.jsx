@@ -22,7 +22,7 @@ export default function Faq() {
           Q: Does PiHound require my wallet secret key?
         </h3>
         <p className="muted" style={{ lineHeight: 1.6, fontSize: '0.9rem' }}>
-          No! PiHound is strictly read-only. We rely exclusively on public Stellar SDK / Horizon endpoints (<code className="mono">api.mainnet.minepi.com</code>). Never enter your 56-character secret key (<code className="mono">S...</code>) anywhere on the internet.
+          No! PiHound is strictly read-only. All data is queried from public on-chain ledger records via the backend. Never enter your 56-character secret key (<code className="mono">S...</code>) anywhere on the internet.
         </p>
       </div>
 
@@ -40,7 +40,7 @@ export default function Faq() {
           Q: How often is live data refreshed?
         </h3>
         <p className="muted" style={{ lineHeight: 1.6, fontSize: '0.9rem' }}>
-          Wallet Sweeps and Horizon feeds stream transactions in real-time as new blocks/ledgers are validated on the Pi Network.
+          Wallet Sweeps feeds update in real-time as the backend continuously crawls and indexes newly validated blocks and ledgers on the Pi Network.
         </p>
       </div>
     </>

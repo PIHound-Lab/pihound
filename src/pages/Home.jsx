@@ -4,40 +4,48 @@ import { fetchNetworkStats, fetchPrice, fetchPriceHistory } from '../services/ap
 
 export default function Home() {
   const [timeframe, setTimeframe] = useState('D');
-  const [priceData, setPriceData] = useState({ price_usd: 0.8542, change_24h: 3.42 });
+  const [priceData, setPriceData] = useState({ price_usd: null, change_24h: null });
   const [historyPoints, setHistoryPoints] = useState([]);
   const [networkStats, setNetworkStats] = useState({
-    accounts: '15482910',
-    locked: '6855210940.12',
-    circulating: '313840120.45',
-    pioneer_transfers: '302290.80',
+    accounts: null,
+    locked: null,
+    circulating: null,
+    pioneer_transfers: null,
   });
 
   useEffect(() => {
-    fetchPrice().then(setPriceData);
-    fetchNetworkStats().then(setNetworkStats);
+    fetchPrice().then((data) => {
+      if (data) setPriceData(data);
+    });
+    fetchNetworkStats().then((data) => {
+      if (data) setNetworkStats(data);
+    });
   }, []);
 
   useEffect(() => {
-    fetchPriceHistory(timeframe).then(setHistoryPoints);
+    fetchPriceHistory(timeframe).then((data) => {
+      if (Array.isArray(data)) setHistoryPoints(data);
+    });
   }, [timeframe]);
 
   const formatStat = (val) => {
+    if (val == null || val === '') return 'N/A';
     const n = Number(val);
-    if (isNaN(n)) return val;
+    if (isNaN(n)) return 'N/A';
     if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
     if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
     if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
     return n.toLocaleString();
   };
 
-  const isPositiveChange = (priceData.change_24h || 0) >= 0;
+  const isPositiveChange = priceData?.change_24h != null ? priceData.change_24h >= 0 : true;
 
-  const lockedVal = Number(networkStats.locked || 6188601569);
-  const circulatingVal = Number(networkStats.circulating || 11015608971);
-  const totalTrackedSupply = lockedVal + circulatingVal || 17204210540;
-  const lockedPct = ((lockedVal / totalTrackedSupply) * 100).toFixed(1);
-  const circulatingPct = ((circulatingVal / totalTrackedSupply) * 100).toFixed(1);
+  const hasEconomics = networkStats?.locked != null && networkStats?.circulating != null;
+  const lockedVal = hasEconomics ? Number(networkStats.locked) : null;
+  const circulatingVal = hasEconomics ? Number(networkStats.circulating) : null;
+  const totalTrackedSupply = hasEconomics ? (lockedVal || 0) + (circulatingVal || 0) : null;
+  const lockedPct = totalTrackedSupply ? (((lockedVal || 0) / totalTrackedSupply) * 100).toFixed(1) : null;
+  const circulatingPct = totalTrackedSupply ? (((circulatingVal || 0) / totalTrackedSupply) * 100).toFixed(1) : null;
 
   return (
     <>
@@ -79,20 +87,34 @@ export default function Home() {
                   color: 'var(--text-main)',
                 }}
               >
-                ${Number(priceData.price_usd || 0.8542).toFixed(4)}
+                {priceData?.price_usd != null ? `$${Number(priceData.price_usd).toFixed(4)}` : 'N/A'}
               </span>
-              <span
-                id="price-change"
-                className="mono"
-                style={{
-                  fontSize: '0.9rem',
-                  fontWeight: 700,
-                  color: isPositiveChange ? 'var(--accent)' : 'var(--text-muted)',
-                }}
-              >
-                {isPositiveChange ? '+' : ''}
-                {Number(priceData.change_24h || 3.42).toFixed(2)}%
-              </span>
+              {priceData?.change_24h != null ? (
+                <span
+                  id="price-change"
+                  className="mono"
+                  style={{
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    color: isPositiveChange ? 'var(--accent)' : 'var(--text-muted)',
+                  }}
+                >
+                  {isPositiveChange ? '+' : ''}
+                  {Number(priceData.change_24h).toFixed(2)}%
+                </span>
+              ) : (
+                <span
+                  id="price-change"
+                  className="mono"
+                  style={{
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  N/A
+                </span>
+              )}
             </div>
           </div>
           <div className="tab-row" style={{ marginTop: 0 }}>
@@ -131,7 +153,7 @@ export default function Home() {
             <span className="stat-label">Total Accounts</span>
           </div>
           <div className="stat-value" id="stat-accounts">
-            {formatStat(networkStats.accounts || '15000000')}
+            {networkStats?.accounts != null ? formatStat(networkStats.accounts) : 'N/A'}
           </div>
         </div>
 
@@ -140,7 +162,7 @@ export default function Home() {
             <span className="stat-label">Locked Supply</span>
           </div>
           <div className="stat-value" id="stat-locked">
-            {formatStat(networkStats.locked || '6188601569')} π
+            {networkStats?.locked != null ? `${formatStat(networkStats.locked)} π` : 'N/A'}
           </div>
         </div>
 
@@ -149,7 +171,7 @@ export default function Home() {
             <span className="stat-label">Circulating Supply</span>
           </div>
           <div className="stat-value" id="stat-circulating">
-            {formatStat(networkStats.circulating || '11015608971')} π
+            {networkStats?.circulating != null ? `${formatStat(networkStats.circulating)} π` : 'N/A'}
           </div>
         </div>
 
@@ -158,7 +180,7 @@ export default function Home() {
             <span className="stat-label">Pioneer Transfers</span>
           </div>
           <div className="stat-value" id="stat-pioneer">
-            {formatStat(networkStats.pioneer_transfers || '12500000')} π
+            {networkStats?.pioneer_transfers != null ? `${formatStat(networkStats.pioneer_transfers)} π` : 'N/A'}
           </div>
         </div>
       </div>
@@ -185,13 +207,13 @@ export default function Home() {
         <div className="progress-bar-wrap">
           <div
             className="progress-fill-locked"
-            style={{ width: `${lockedPct}%` }}
-            title={`Locked Supply (${lockedPct}%)`}
+            style={{ width: lockedPct ? `${lockedPct}%` : '0%' }}
+            title={lockedPct ? `Locked Supply (${lockedPct}%)` : 'Locked Supply (N/A)'}
           />
           <div
             className="progress-fill-circulating"
-            style={{ width: `${circulatingPct}%`, background: '#22c55e' }}
-            title={`Circulating Supply (${circulatingPct}%)`}
+            style={{ width: circulatingPct ? `${circulatingPct}%` : '0%', background: '#22c55e' }}
+            title={circulatingPct ? `Circulating Supply (${circulatingPct}%)` : 'Circulating Supply (N/A)'}
           />
         </div>
         <div
@@ -206,10 +228,10 @@ export default function Home() {
           className="muted"
         >
           <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
-            ● Locked Supply: {formatStat(lockedVal)} π ({lockedPct}%)
+            ● Locked Supply: {lockedVal != null ? `${formatStat(lockedVal)} π (${lockedPct}%)` : 'N/A'}
           </span>
           <span style={{ color: '#22c55e', fontWeight: 600 }}>
-            ● Circulating Supply: {formatStat(circulatingVal)} π ({circulatingPct}%)
+            ● Circulating Supply: {circulatingVal != null ? `${formatStat(circulatingVal)} π (${circulatingPct}%)` : 'N/A'}
           </span>
         </div>
       </div>
@@ -247,11 +269,7 @@ export default function Home() {
             marginBottom: 0,
           }}
         >
-          PiHound directly queries the official Pi Horizon RPC (
-          <span className="mono" style={{ color: 'var(--text-main)' }}>
-            api.mainnet.minepi.com
-          </span>
-          ) to deliver transparent, unmanipulated transaction tracking, live sweeps monitoring, and wallet analytics.
+          PiHound connects to the PiHound backend analytics engine to deliver transparent transaction tracking, live sweeps monitoring, and wallet analytics.
         </p>
       </div>
     </>

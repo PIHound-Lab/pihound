@@ -53,7 +53,7 @@ export default function Introduction() {
             </div>
             <div className="intro-card-title">Live Sweeps Monitor</div>
             <p className="intro-card-desc">
-              Real-time operation stream tracking claims and automated sends across the Pi Horizon network.
+              Real-time operation tracking claims and automated sends indexed across the Pi Network.
             </p>
           </div>
           <Link to="/wallet_sweeps" className="intro-card-link">
@@ -121,11 +121,7 @@ export default function Introduction() {
             marginBottom: 0,
           }}
         >
-          PiHound directly queries the official Pi Horizon RPC (
-          <span className="mono" style={{ color: 'var(--text-main)' }}>
-            api.mainnet.minepi.com
-          </span>
-          ) to deliver transparent, unmanipulated transaction tracking, live sweeps monitoring, and wallet analytics.
+          PiHound connects to the PiHound backend analytics engine to deliver transparent transaction tracking, live sweeps monitoring, and wallet analytics.
         </p>
       </div>
     </>

@@ -22,7 +22,7 @@ export default function Terms() {
           2. Read-Only Transparency &amp; Data Usage
         </h3>
         <p className="muted" style={{ lineHeight: 1.6, fontSize: '0.9rem' }}>
-          All data displayed on PiHound is queried publicly from the Pi Network Horizon API (<code className="mono">api.mainnet.minepi.com</code>). PiHound never asks for, stores, or handles private keys, seed phrases, or wallet credentials.
+          All data displayed on PiHound is served through the PiHound backend API from publicly indexed Pi Network ledger records. PiHound never asks for, stores, or handles private keys, seed phrases, or wallet credentials.
         </p>
       </div>
 

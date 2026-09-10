@@ -62,7 +62,7 @@ export default function TrackAndTrace() {
 
     await new Promise((r) => setTimeout(r, 150));
     setProgress(55);
-    setProgressStatus('Querying Pi Horizon node multi-branch operations...');
+    setProgressStatus('Querying backend transaction trace engine...');
 
     try {
       const data = await fetchTrace(trimmed);
@@ -95,7 +95,7 @@ export default function TrackAndTrace() {
       const item = {
         hash,
         date: new Date().toISOString(),
-        endpoint: data.endpoint_name || data.endpoint_type || 'Unknown Endpoint',
+        endpoint: data.endpoint_name || data.endpoint_type || 'N/A',
         hops: data.total_hops || 0,
       };
       const updated = [item, ...existing.filter((x) => x.hash !== hash)].slice(0, 8);
@@ -738,7 +738,7 @@ export default function TrackAndTrace() {
                 🏁 Terminal Trace Endpoint Detected
               </div>
               <div style={{ color: 'var(--text-muted)' }}>
-                Target: <strong>{traceData.endpoint_name || 'Destination Address'}</strong> ({traceData.endpoint_type})
+                Target: <strong>{traceData.endpoint_name || 'N/A'}</strong> ({traceData.endpoint_type || 'N/A'})
               </div>
               <div className="mono dim" style={{ fontSize: '0.75rem', marginTop: '0.2rem', wordBreak: 'break-all' }}>
                 {traceData.endpoint_address}

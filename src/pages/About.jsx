@@ -33,7 +33,7 @@ export default function About() {
           Read-Only Architecture
         </h3>
         <p className="muted" style={{ lineHeight: 1.6, fontSize: '0.9rem' }}>
-          PiHound operates on a 100% read-only architecture using official Pi Horizon endpoints (<code className="mono">api.mainnet.minepi.com</code>). Your secret keys remain safe and are never requested or stored.
+          PiHound operates on a 100% read-only architecture. All blockchain data is queried server-side, ensuring your secret keys remain safe and are never requested or stored.
         </p>
       </div>
     </>

@@ -62,7 +62,7 @@ const ROUTE_META = {
   '/terms': {
     title: 'Terms of Service — PiHound',
     description:
-      'Review the terms and conditions for utilizing the PiHound analytics platform, Horizon data indexing, and explorer services.',
+      'Review the terms and conditions for utilizing the PiHound analytics platform, ledger data indexing, and explorer services.',
     canonical: `${BASE_URL}/terms`,
   },
   '/privacy': {

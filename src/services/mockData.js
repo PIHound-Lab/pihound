@@ -1,4 +1,4 @@
-// Comprehensive realistic mock data mirroring Pi Mainnet Horizon & PiHound API responses
+// Comprehensive realistic mock data mirroring PiHound Backend API responses
 
 export const MOCK_PRICE = {
   price_usd: 0.8542,
